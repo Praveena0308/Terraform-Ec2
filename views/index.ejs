@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple To-Do App</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        ul { list-style-type: none; padding: 0; }
+        li { padding: 10px; background: #f4f4f4; margin-bottom: 5px; }
+        button { background: red; color: white; border: none; padding: 5px 10px; cursor: pointer; }
+        button:hover { background: darkred; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>To-Do List</h1>
+
+        <!-- Form to add a task -->
+        <form action="/addtask" method="POST">
+            <input type="text" name="newtask" placeholder="New task..." required>
+            <button type="submit">Add Task</button>
+        </form>
+
+        <!-- Display tasks -->
+        <ul>
+            <% tasks.forEach((task) => { %>
+                <li>
+                    <%= task.name %> <!-- Display only the task's name -->
+                    <!-- Form to remove a task -->
+                    <form action="/removetask" method="POST" style="display:inline;">
+                        <input type="hidden" name="task" value="<%= task.name %>">
+                        <button type="submit">Remove</button>
+                    </form>
+                </li>
+            <% }) %>
+        </ul>
+    </div>
+</body>
+</html>
