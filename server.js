@@ -1,67 +1,75 @@
+// server.js
+
 const express = require('express');
 const bodyParser = require('body-parser');
-const mongoose = require('mongoose');
+const { Sequelize, DataTypes } = require('sequelize');
 
 const app = express();
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Connect to MongoDB (replace with your MongoDB credentials if needed)
-
-
-// Ensure this is using 'mongo' as the host
-const mongoURI = process.env.MONGO_URI || 'mongodb://mongo:27017/todoDB';
-
-mongoose.connect(mongoURI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error('MongoDB connection error:', err));
-// Define the task schema
-const taskSchema = new mongoose.Schema({
-    name: String
+// Connect to MySQL using Sequelize
+const sequelize = new Sequelize(process.env.MYSQL_DB, process.env.MYSQL_USER, process.env.MYSQL_PASSWORD, {
+  host: process.env.MYSQL_HOST,
+  dialect: 'mysql',
+  logging: false, // Disable Sequelize logs if not needed
 });
 
-// Create a model based on the schema
-const Task = mongoose.model('Task', taskSchema);
-
-// Home route - fetch tasks from MongoDB
-app.get('/', (req, res) => {
-    Task.find({}, (err, tasks) => {
-        if (err) {
-            console.log(err);
-        } else {
-            res.render('index', { tasks: tasks });
-        }
-    });
+// Define the Task model (this maps to a MySQL table)
+const Task = sequelize.define('Task', {
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false
+  }
 });
 
-// Add task to MongoDB
-app.post('/addtask', (req, res) => {
-    const newTask = new Task({
-        name: req.body.newtask
-    });
-    newTask.save((err) => {
-        if (err) {
-            console.log(err);
-        }
-        res.redirect('/');
-    });
+// Sync the model with the database
+// `force: false` ensures the table is created if it doesn't exist without dropping it if it already exists.
+sequelize.sync({ alter: true })  // `alter: true` ensures the table structure is updated without dropping data
+  .then(() => {
+    console.log("Tables have been created or updated.");
+  })
+  .catch((err) => {
+    console.error("Unable to sync the database:", err);
+  });
+
+// Routes remain the same
+
+// Home route - fetch tasks from MySQL
+app.get('/', async (req, res) => {
+  try {
+    const tasks = await Task.findAll();
+    res.render('index', { tasks: tasks });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error fetching tasks');
+  }
 });
 
-// Remove task from MongoDB
-app.post('/removetask', (req, res) => {
+// Add task to MySQL
+app.post('/addtask', async (req, res) => {
+  try {
+    await Task.create({ name: req.body.newtask });
+    res.redirect('/');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error adding task');
+  }
+});
+
+// Remove task from MySQL
+app.post('/removetask', async (req, res) => {
+  try {
     const taskToRemove = req.body.task;
-    Task.deleteOne({ name: taskToRemove }, (err) => {
-        if (err) {
-            console.log(err);
-        }
-        res.redirect('/');
-    });
+    await Task.destroy({ where: { name: taskToRemove } });
+    res.redirect('/');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error removing task');
+  }
 });
 
 // Start the server
 app.listen(3000, () => {
-    console.log('Server is running on http://localhost:3000');
+  console.log('Server is running on http://localhost:3000');
 });

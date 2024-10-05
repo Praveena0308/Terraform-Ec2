@@ -1,5 +1,5 @@
 # To-Do List Web App
-### Here's a simple To-Do List Web App built using Node.js and Express. 
+### Here's a simple To-Do List Web App built using Node.js and mysql database. 
 ## Initialize the project:
 npm init -y
 ## Install dependencies:

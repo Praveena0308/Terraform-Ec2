@@ -1,0 +1,23 @@
+pipeline {
+    agent any
+    
+    stages{
+        stage("checkout code"){
+            steps{
+            git "https://github.com/Praveena0308/Terraform-on-aws-Ec2.git"
+        }
+        }
+        stage("install dependencies"){
+            steps {
+                sh "npm insstall"
+            
+            }
+        }
+        stage("push docker image"){
+            steps{
+                
+            }
+        }
+     }
+
+}

@@ -1,11 +1,20 @@
 services:
-  mongo:
-    image: mongo:latest
-    container_name: to-do-app-mongo
+  mysql:
+    image: mysql:latest
+    container_name: to-do-app-mysql
     ports:
-      - "27017:27017"
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: todoDB
     volumes:
-      - mongo-data:/data/db
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   web:
     build: .
@@ -13,9 +22,13 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - mongo
+      mysql:
+        condition: service_healthy
     environment:
-      - MONGO_URI=mongodb://mongo:27017/todoDB 
+      - MYSQL_HOST=mysql
+      - MYSQL_DB=todoDB
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=password
 
 volumes:
-  mongo-data:
+  mysql-data:
